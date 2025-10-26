@@ -18,10 +18,11 @@ pipeline {
         
         stage('Run Docker Container') {
             steps {
-                echo 'Menjalankan container...'
-                bat 'docker stop alvyn-game-app || exit 0'
-                bat 'docker rm alvyn-game-app || exit 0'
-                bat 'docker run -d --name alvyn-game-app -p 8081:8080 alvyngame_react-native-web'
+                echo 'Menghentikan container lama (jika ada)...'
+                bat 'docker-compose down'
+                
+                echo 'Menjalankan container baru...'
+                bat 'docker-compose up -d react-native-web'
             }
         }
     }
