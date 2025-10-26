@@ -1,45 +1,349 @@
-{
-  "expo": {
-    "name": "AlvynGame",
-    "slug": "AlvynGameTicTacToe",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "alvyngame",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
-        }
-      ]
-    ],
-    "experiments": {
-      "reactCompiler": true
+import { useEffect, useState } from 'react';
+import { Animated, Easing, ImageBackground, Pressable, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+
+const GOLD = '#DAA520';
+const DARK_NAVY = '#1a202c';
+const LIGHT_GREY = '#a0a0a0';
+const WHITE = '#f0f0f0';
+const LIGHT_GOLD = '#FFD700';
+
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
     }
   }
+  if (squares.every(square => square !== null)) {
+    return 'Seri';
+  }
+  return null;
 }
+
+function Square({ value, onSquarePress }) {
+  const scale = useState(new Animated.Value(1))[0];
+
+  const animatePress = () => {
+    Animated.sequence([
+      Animated.timing(scale, {
+        toValue: 0.8,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }),
+    ]).start();
+  };
+
+  const displayValue = value === 'X' ? 'X' : value === 'O' ? 'O' : '';
+
+  return (
+    <Pressable
+      style={styles.square}
+      onPress={() => {
+        animatePress();
+        onSquarePress();
+      }}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Text style={[styles.squareText, { color: value === 'X' ? LIGHT_GOLD : WHITE }]}>
+          {displayValue}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+export default function App() {
+  const [player1Name, setPlayer1Name] = useState('');
+  const [player2Name, setPlayer2Name] = useState('');
+  const [showGame, setShowGame] = useState(false);
+
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [xIsNext, setXIsNext] = useState(true);
+
+  const winner = calculateWinner(board);
+  let status;
+  if (winner) {
+    status = winner === 'Seri' ? 'Game Seri!' : `Pemenang: ${winner === 'X' ? player1Name : player2Name} (${winner})`;
+  } else {
+    status = `Giliran: ${xIsNext ? player1Name : player2Name} (${xIsNext ? 'X' : 'O'})`;
+  }
+
+  const pulseAnim = useState(new Animated.Value(1))[0];
+  useEffect(() => {
+    if (!winner) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(1);
+    }
+  }, [winner, xIsNext]);
+
+  function handlePress(i) {
+    if (board[i] || calculateWinner(board)) {
+      return;
+    }
+    const nextBoard = board.slice();
+    nextBoard[i] = xIsNext ? 'X' : 'O';
+    setBoard(nextBoard);
+    setXIsNext(!xIsNext);
+  }
+
+  function resetGame() {
+    setBoard(Array(9).fill(null));
+    setXIsNext(true);
+  }
+
+  const startGame = () => {
+    if (player1Name.trim() === '' || player2Name.trim() === '') {
+      console.warn('Mohon masukkan nama kedua pemain!');
+      return;
+    }
+    setShowGame(true);
+  };
+
+  if (!showGame) {
+    return (
+      <ImageBackground source={require('./assets/images/background.jpg')} style={styles.background}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.startContainer}>
+          <Text style={styles.title}>Tic Tac Toe</Text>
+          <Text style={styles.subtitle}>@alvynwrr</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Nama Pemain 1 (X)"
+            placeholderTextColor={LIGHT_GREY}
+            value={player1Name}
+            onChangeText={setPlayer1Name}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Nama Pemain 2 (O)"
+            placeholderTextColor={LIGHT_GREY}
+            value={player2Name}
+            onChangeText={setPlayer2Name}
+          />
+          <Pressable style={styles.startButton} onPress={startGame}>
+            <Text style={styles.startButtonText}>Mulai Pertandingan</Text>
+          </Pressable>
+        </View>
+      </ImageBackground>
+    );
+  }
+
+  return (
+    <ImageBackground source={require('./assets/images/background.jpg')} style={styles.background}>
+      <StatusBar barStyle="light-content" />
+      <View style={styles.overlay}>
+        <Text style={styles.title}>Tic Tac Toe</Text>
+        <Animated.Text style={[styles.status, { transform: [{ scale: pulseAnim }] }]}>
+          {status}
+        </Animated.Text>
+        <View style={styles.boardContainer}>
+          <View style={styles.board}>
+            <View style={styles.boardRow}>
+              <Square value={board[0]} onSquarePress={() => handlePress(0)} />
+              <Square value={board[1]} onSquarePress={() => handlePress(1)} />
+              <Square value={board[2]} onSquarePress={() => handlePress(2)} />
+            </View>
+            <View style={styles.boardRow}>
+              <Square value={board[3]} onSquarePress={() => handlePress(3)} />
+              <Square value={board[4]} onSquarePress={() => handlePress(4)} />
+              <Square value={board[5]} onSquarePress={() => handlePress(5)} />
+            </View>
+            <View style={styles.boardRow}>
+              <Square value={board[6]} onSquarePress={() => handlePress(6)} />
+              <Square value={board[7]} onSquarePress={() => handlePress(7)} />
+              <Square value={board[8]} onSquarePress={() => handlePress(8)} />
+            </View>
+          </View>
+        </View>
+        {(winner || winner === 'Seri') && (
+          <Pressable style={styles.resetButton} onPress={resetGame}>
+            <Text style={styles.resetButtonText}>Main Lagi</Text>
+          </Pressable>
+        )}
+        <Pressable style={styles.backButton} onPress={() => setShowGame(false)}>
+          <Text style={styles.backButtonText}>Kembali ke Menu</Text>
+        </Pressable>
+      </View>
+    </ImageBackground>
+  );
+}
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  startContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '80%',
+    maxWidth: 400,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: 20,
+    borderRadius: 10,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: GOLD,
+    marginBottom: 5,
+    fontFamily: 'serif',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: {width: -1, height: 1},
+    textShadowRadius: 10
+  },
+  subtitle: {
+    fontSize: 24,
+    color: WHITE,
+    marginBottom: 40,
+    fontFamily: 'serif',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: {width: -1, height: 1},
+    textShadowRadius: 8
+  },
+  status: {
+    fontSize: 26,
+    color: LIGHT_GREY,
+    marginBottom: 30,
+    fontFamily: 'serif',
+    textAlign: 'center',
+  },
+  input: {
+    width: '100%',
+    padding: 15,
+    marginVertical: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    color: GOLD,
+    fontSize: 18,
+    borderWidth: 1,
+    borderColor: GOLD,
+  },
+  startButton: {
+    marginTop: 30,
+    backgroundColor: GOLD,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.30,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  startButtonText: {
+    color: DARK_NAVY,
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'serif',
+  },
+  boardContainer: {
+    width: '90%',
+    maxWidth: 380,
+    aspectRatio: 1,
+    borderWidth: 4,
+    borderColor: GOLD,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  board: {
+    flex: 1,
+  },
+  boardRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  square: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: DARK_NAVY,
+    backgroundColor: 'rgba(255, 215, 0, 0.05)',
+  },
+  squareText: {
+    fontSize: 70,
+    fontWeight: 'bold',
+    fontFamily: 'serif',
+  },
+  resetButton: {
+    marginTop: 40,
+    backgroundColor: GOLD,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  resetButtonText: {
+    color: DARK_NAVY,
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'serif',
+  },
+  backButton: {
+    marginTop: 15,
+    backgroundColor: 'transparent',
+    borderColor: LIGHT_GREY,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: LIGHT_GREY,
+    fontSize: 16,
+    fontFamily: 'serif',
+  },
+});
+
