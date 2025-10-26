@@ -1,7 +1,6 @@
-FROM node:18-alpine AS builder
-WORKDIR /app
+FROM node:20-alpine AS builder
 
-RUN npm install -g expo-cli
+WORKDIR /app
 
 COPY package*.json ./
 
@@ -11,15 +10,14 @@ COPY . .
 
 RUN npx expo export
 
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
 RUN npm install -g serve
 
-EXPOSE 8081
+COPY --from=builder /app/dist .
 
-COPY --from=builder /app/dist ./dist
+EXPOSE 8080
 
-CMD ["serve", "-s", "dist", "-l", "8081"]
-
+CMD ["serve", "-s", ".", "-l", "8080"]
