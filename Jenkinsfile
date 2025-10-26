@@ -23,6 +23,15 @@ pipeline {
         stage('Run Docker Container (Web)') {
             steps {
                 echo 'Menghentikan container lama (jika ada)...'
+                
+                // Hentikan paksa container dengan nama yang sama, abaikan error jika tidak ada
+                // '& exit /b 0' adalah cara 'bat' untuk melanjutkan meski perintah gagal
+                bat 'docker stop alvyn-game-app & exit /b 0'
+                
+                // Hapus paksa container dengan nama yang sama, abaikan error jika tidak ada
+                bat 'docker rm alvyn-game-app & exit /b 0'
+
+                // Jalankan 'down' untuk membersihkan (sekarang harusnya aman)
                 bat 'docker-compose down'
                 
                 echo 'Menjalankan container baru...'
