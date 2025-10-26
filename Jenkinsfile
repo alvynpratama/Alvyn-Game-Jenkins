@@ -43,8 +43,7 @@ pipeline {
                 
                 bat 'npm install'
                 
-                bat 'npx eas login --token %EXPO_TOKEN%'
-                
+                echo 'Menjalankan EAS Build (login otomatis menggunakan EXPO_TOKEN)...'
                 bat 'npx eas build -p android --profile production --non-interactive'
             }
         }
