@@ -12,19 +12,16 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Memulai build Docker image...'
-                bat 'docker-compose build my-react-native-web-app'
+                bat 'docker-compose build react-native-web'
             }
         }
         
         stage('Run Docker Container') {
             steps {
                 echo 'Menjalankan container...'
-                
-                bat 'docker stop my-rn-web-container || exit 0'
-                
-                bat 'docker rm my-rn-web-container || exit 0'
-                
-                bat 'docker run -d --name my-rn-web-container -p 8081:8080 alvyngame_my-react-native-web-app'
+                bat 'docker stop alvyn-game-app || exit 0'
+                bat 'docker rm alvyn-game-app || exit 0'
+                bat 'docker run -d --name alvyn-game-app -p 8081:8080 alvyngame_react-native-web'
             }
         }
     }
