@@ -14,7 +14,7 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image (Web)') {
+        stage('Build Docker Image') {
             steps {
                 echo 'Memulai build Docker image...'
                 bat 'docker-compose build react-native-web'
@@ -37,7 +37,7 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container (Web)') {
+        stage('Run Docker Container') {
             steps {
                 echo 'Menghentikan container lama (jika ada)...'
                 bat 'docker stop alvyn-game-app & exit /b 0'
