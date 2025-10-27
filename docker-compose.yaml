@@ -1,13 +1,9 @@
-version: '3.8'
-
 services:
   react-native-web:
+    image: alvynwira/alvyngame:latest
     build: .
-    
     container_name: alvyn-game-app
-    
     ports:
-      - "8081:8081"
-    
+      - "8081:8080"
     restart: always
 
